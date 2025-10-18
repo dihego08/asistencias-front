@@ -31,7 +31,13 @@ export default function Horarios() {
 	const [dias, setDias] = useState(dias_semana);
 
 	useEffect(() => {
-		listar();
+
+		const token = localStorage.getItem("token");
+		if (!token) {
+			window.location.href = "/login";
+		} else {
+			listar();
+		}
 	}, []);
 
 	const listar = async () => {

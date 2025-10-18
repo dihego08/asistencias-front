@@ -34,13 +34,13 @@ export default function Sidebar() {
         </a>
         <div id="collapsePages" className="collapse" aria-labelledby="headingPages" data-parent="#accordionSidebar">
           <div className="bg-brown py-2 collapse-inner rounded">
-          <NavLink  className="collapse-item" to="colaboradores">Colaboradores</NavLink >
-            <NavLink  className="collapse-item" to="relojes">Relojes</NavLink >
-            <NavLink  className="collapse-item" to="feriados">Feriados</NavLink >
-            <NavLink  className="collapse-item" to="permisos">Permisos</NavLink >
-            <NavLink  className="collapse-item" to="horarios">Horarios</NavLink >
-            <NavLink  className="collapse-item" to="asignar">Asignar Horario</NavLink >
-            <NavLink  className="collapse-item" to="tipos_permisos">Tipos de Permisos</NavLink >
+          <NavLink  className="collapse-item" to="/colaboradores">Colaboradores</NavLink >
+            <NavLink  className="collapse-item" to="/relojes">Relojes</NavLink >
+            <NavLink  className="collapse-item" to="/feriados">Feriados</NavLink >
+            <NavLink  className="collapse-item" to="/permisos">Permisos</NavLink >
+            <NavLink  className="collapse-item" to="/horarios">Horarios</NavLink >
+            <NavLink  className="collapse-item" to="/asignar">Asignar Horario</NavLink >
+            <NavLink  className="collapse-item" to="/tipos_permisos">Tipos de Permisos</NavLink >
           </div>
         </div>
       </li>

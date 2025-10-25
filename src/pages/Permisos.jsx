@@ -89,8 +89,11 @@ export default function Permisos() {
         setIdEdit(permiso.id);
 
         setIdColaborador(permiso.id_colaborador);
-        setFechaInicio(permiso.fecha_inicio);
-        setFechaFin(permiso.fecha_fin);
+        /*setFechaInicio(permiso.fecha_inicio);
+        setFechaFin(permiso.fecha_fin);*/
+        
+		setFechaInicio(permiso.fecha_inicio ? new Date(`${permiso.fecha_inicio}T00:00:00`) : null);
+        setFechaFin(permiso.fecha_fin ? new Date(`${permiso.fecha_fin}T00:00:00`) : null);
         setMotivo(permiso.motivo);
         setIdTipo(permiso.id_tipo);
         setEstado(permiso.estado);

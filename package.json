@@ -14,12 +14,17 @@
     "axios": "^1.12.2",
     "bootstrap": "^5.3.8",
     "date-fns": "^4.1.0",
+    "file-saver": "^2.0.5",
+    "jspdf": "^3.0.3",
+    "jspdf-autotable": "^5.0.2",
     "react": "^19.1.1",
     "react-bootstrap": "^2.10.10",
+    "react-data-table-component": "^7.7.0",
     "react-datepicker": "^8.7.0",
     "react-dom": "^19.1.1",
     "react-router-dom": "^7.9.4",
-    "react-switch": "^7.1.0"
+    "react-switch": "^7.1.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",

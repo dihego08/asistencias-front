@@ -1,11 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { Modal, Button, Form } from "react-bootstrap";
-import { createColaboradorHorario, updateColaboradorHorario, getColaboradorHorario, actualizarEstadoColaboradorHorario,deleteColaboradorHorario } from "../services/colaboradorHorariosService";
+import { Modal, Button, Form, DropdownButton, Dropdown } from "react-bootstrap";
+import { createColaboradorHorario, updateColaboradorHorario, getColaboradorHorario, actualizarEstadoColaboradorHorario, deleteColaboradorHorario } from "../services/colaboradorHorariosService";
 import SelectColaborador from "../components/SelectColaborador";
 import SelectHorario from "../components/SelectHorario";
 import FechaPicker from "../components/FechaPicker"; // el componente anterior
 import alertify from 'alertifyjs';
 import Switch from "react-switch";
+import { saveAs } from "file-saver";
+import * as XLSX from "xlsx";
+import DataTable from "react-data-table-component";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 export default function AsignarHorarioModal() {
 	const [colaboradorHorario, setColaboradorHorarios] = useState([]);
@@ -17,16 +22,130 @@ export default function AsignarHorarioModal() {
 	const [loadingId, setLoadingId] = useState(null);
 	const [estado, setEstado] = useState("");
 	const [idEdit, setIdEdit] = useState(null);
+	const [filterText, setFilterText] = useState("");
 
 	useEffect(() => {
 		listar();
 	}, []);
+	const exportToPDF = () => {
+		const doc = new jsPDF({
+			orientation: "landscape",
+			unit: "mm",
+			format: "a4",
+		});
+		doc.text(`Horarios Asignados`, 14, 15);
+		const tableColumn = [
+			"ID",
+			"Colaborador",
+			"Horario",
+			"Fecha Inicio",
+			"Fecha Fin",
+			"Estado",
+		];
+		const tableRows = filteredData.map((row) => [
+			row.id,
+			row.colaborador.nombres + " " + row.colaborador.apellido_paterno + " " + row.colaborador.apellido_materno,
+			row.horario.nombre,
+			row.fecha_inicio,
+			row.fecha_fin,
+			row.estado === 1 ? "Activo" : "Inactivo",
+		]);
+		autoTable(doc, {
+			head: [tableColumn],
+			body: tableRows,
+			startY: 25,
+		});
+		doc.save(`horarios_asignados.pdf`);
+	};
+	// Filtrado simple por fecha o estado
+	const filteredData = colaboradorHorario.filter(
+		(item) =>
+			item.colaborador.nombres?.toLowerCase().includes(filterText.toLowerCase()) ||
+			item.estado_asistencia?.toLowerCase().includes(filterText.toLowerCase())
+	);
+	const subHeaderComponent = (
+		<div className="d-flex align-items-center justify-content-between w-100">
+			<input
+				type="text"
+				className="form-control w-100"
+				placeholder="🔍 Buscar por fecha o estado..."
+				value={filterText}
+				onChange={(e) => setFilterText(e.target.value)}
+			/>
+		</div>
+	);
+	const exportToExcel = () => {
+		// Crear hoja Excel
+		const ws = XLSX.utils.json_to_sheet(filteredData);
+		const wb = XLSX.utils.book_new();
+		XLSX.utils.book_append_sheet(wb, ws, "Reporte");
 
+		// Generar archivo Excel y descargarlo
+		const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+		const blob = new Blob([wbout], { type: "application/octet-stream" });
+		saveAs(blob, `horarios_asignados.xlsx`);
+	};
+	const columns = [
+		{
+			name: "ID",
+			selector: (row) => row.id,
+			sortable: true,
+		},
+		{
+			name: "Colaborador",
+			selector: (row) => row.colaborador.nombres + " " + row.colaborador.apellido_paterno + " " + row.colaborador.apellido_materno,
+			sortable: true,
+		},
+		{
+			name: "Horario",
+			selector: (row) => row.horario.nombre,
+			sortable: true,
+		},
+		{
+			name: "Fecha Inicio",
+			selector: (row) => row.fecha_inicio,
+			sortable: true,
+		},
+		{
+			name: "Fecha Fin",
+			selector: (row) => row.fecha_fin,
+			sortable: true,
+		},
+		{
+			name: "Estado",
+			cell: (row) => (
+				<Switch
+					checked={row.estado === 1}
+					onChange={(checked) => handleEstadoChange(row.id, checked)}
+					onColor="#28a745"
+					offColor="#ccc"
+					uncheckedIcon={false}
+					checkedIcon={false}
+					disabled={loadingId === row.id}
+				/>
+			),
+			ignoreRowClick: true,
+			allowOverflow: true,
+			className: "text-center",
+		},
+		{
+			name: "",
+			cell: (row) => (
+				<div>
+					<span className="btn btn-outline-warning btn-sm mr-1" onClick={() => editar(row)}><i className="fa fa-edit"></i></span>
+					<span className="btn btn-outline-danger btn-sm" onClick={() => eliminar(row)}><i className="fa fa-trash"></i></span>
+				</div>
+			),
+			ignoreRowClick: true,
+			allowOverflow: true,
+			width: "100px",
+			className: "text-center",
+		},
+	];
 	const listar = async () => {
 		const data = await getColaboradorHorario();
 		setColaboradorHorarios(data);
 	};
-
 
 	const handleEstadoChange = async (id, nuevoEstado) => {
 		setLoadingId(id);
@@ -56,12 +175,17 @@ export default function AsignarHorarioModal() {
 				alertify.error("Debe seleccionar colaborador y horario");
 				return;
 			}
-
+			const fechaInicioFormateada = fecha_inicio instanceof Date
+				? fecha_inicio.toISOString().split("T")[0] // → '2025-11-22'
+				: fecha_inicio.split("T")[0]; // por si viene como string ISO
+			const fechaFinFormateada = fecha_fin instanceof Date
+				? fecha_fin.toISOString().split("T")[0] // → '2025-11-22'
+				: fecha_fin.split("T")[0]; // por si viene como string ISO
 			const payload = {
-				id_colaborador: id_colaborador,
+				id_colaborador: id_colaborador.id,
 				id_horario: id_horario,
-				fecha_inicio: fecha_inicio || null,
-				fecha_fin: fecha_fin || null,
+				fecha_inicio: fechaInicioFormateada || null,
+				fecha_fin: fechaFinFormateada || null,
 				estado: estado
 			};
 			let res = null;
@@ -81,14 +205,13 @@ export default function AsignarHorarioModal() {
 		} catch (err) {
 			alertify.error("Error al intentar guardar el feriado " + err);
 		}
-
 	};
 
 	const editar = (horario) => {
 		setIdEdit(horario.id);
 		setFechaInicio(horario.fecha_inicio ? new Date(`${horario.fecha_inicio}T00:00:00`) : null);
 		setFechaFin(horario.fecha_fin ? new Date(`${horario.fecha_fin}T00:00:00`) : null);
-		setIdColaborador(horario.id_colaborador);
+		setIdColaborador({ id: horario.id_colaborador });
 		setIdHorario(horario.id_horario);
 		setEstado(horario.estado);
 		setShow(true); // control del modal
@@ -97,82 +220,73 @@ export default function AsignarHorarioModal() {
 		setIdEdit(null);
 		setFechaInicio("");
 		setFechaFin("");
-		setIdColaborador("");
+		setIdColaborador({ id: "" });
 		setEstado("");
 		setIdHorario("");
 		setShow(false);
 	};
-    const eliminar = async (horario) => {
-        alertify.confirm(
-            "Confirmar eliminación",
-            "¿Seguro que deseas eliminar este horario?",
-            async function () {
-                try {
-                    const res = await deleteColaboradorHorario(horario.id);
+	const eliminar = async (horario) => {
+		alertify.confirm(
+			"Confirmar eliminación",
+			"¿Seguro que deseas eliminar este horario?",
+			async function () {
+				try {
+					const res = await deleteColaboradorHorario(horario.id);
 
-                    if (res.status === "success") {
-                        alertify.success(res.message);
-                        listar(); // refresca la lista
-                    } else {
-                        alertify.error(res.message);
-                    }
-                } catch (err) {
-                    alertify.error("Error al intentar eliminar el horario");
-                }
-            },
-            function () {
-                alertify.message("Acción cancelada");
-            }
-        );
-    };
+					if (res.status === "success") {
+						alertify.success(res.message);
+						listar(); // refresca la lista
+					} else {
+						alertify.error(res.message);
+					}
+				} catch (err) {
+					alertify.error("Error al intentar eliminar el horario");
+				}
+			},
+			function () {
+				alertify.message("Acción cancelada");
+			}
+		);
+	};
 	return (
 		<div>
 			<h1 className="h3 mb-4 text-gray-800">Asignación de Horarios</h1>
 			<div className="row">
 				<div className="col-md-12 text-right mb-3">
-					<span className="btn btn-outline-primary btn-rounded" data-toggle="modal"
-						data-target="#formulario" onClick={() => setShow(true)}><i className="fa fa-plus"></i> Nueva Asignación de Horario</span>
+					<button
+						className="btn btn-outline-primary btn-rounded me-2 d-inline-block"
+						onClick={() => setShow(true)}
+					>
+						<i className="fa fa-plus"></i> Nueva Asignación de Horario
+					</button>
+
+					<DropdownButton
+						id="dropdown-export"
+						title="Exportar"
+						variant="primary"
+						className="d-inline-block"
+					>
+						<Dropdown.Item onClick={exportToExcel}>
+							<i className="fas fa-file-excel text-success me-2"></i>
+							Exportar a Excel
+						</Dropdown.Item>
+						<Dropdown.Item onClick={exportToPDF}>
+							<i className="fas fa-file-pdf text-danger me-2"></i>
+							Exportar a PDF
+						</Dropdown.Item>
+					</DropdownButton>
 				</div>
 				<div className="table-response w-100">
-					<table className="table table-bordered table-striped" id="tabla-marcas">
-						<thead>
-							<tr>
-								<th>Id</th>
-								<th>Colaborador</th>
-								<th>Horario</th>
-								<th>Fecha Inicio</th>
-								<th>Fecha Fin</th>
-								<th>Estado</th>
-								<th width="5%"></th>
-							</tr>
-						</thead>
-						<tbody>
-							{colaboradorHorario.map((c) => (
-								<tr key={c.id}>
-									<td>{c.id}</td>
-									<td>{c.colaborador !== null ? c.colaborador.apellido_paterno + " " + c.colaborador.apellido_materno + " " + c.colaborador.nombres : ""}</td>
-									<td>{c.horario !== null ? c.horario.nombre : ""}</td>
-									<td>{c.fecha_inicio}</td>
-									<td>{c.fecha_fin}</td>
-									<td>
-										<Switch
-											checked={c.estado === 1}
-											onChange={(checked) => handleEstadoChange(c.id, checked)}
-											onColor="#28a745"
-											offColor="#ccc"
-											uncheckedIcon={false}
-											checkedIcon={false}
-											disabled={loadingId === c.id}
-										/>
-									</td>
-									<td>
-										<span className="btn btn-outline-warning btn-sm d-block mb-1" onClick={() => editar(c)}><i className="fa fa-edit"></i></span>
-										<span className="btn btn-outline-danger btn-sm d-block" onClick={() => eliminar(c)}><i className="fa fa-trash"></i></span>
-									</td>
-								</tr>
-							))}
-						</tbody>
-					</table>
+					<DataTable
+						title={``}
+						columns={columns}
+						data={filteredData} // usa los datos filtrados
+						pagination
+						highlightOnHover
+						striped
+						subHeader
+						subHeaderComponent={subHeaderComponent}
+					/>
 				</div>
 			</div>
 			<Modal show={show} onHide={() => cerrarModal()} centered>
@@ -183,7 +297,7 @@ export default function AsignarHorarioModal() {
 					<Form>
 						<Form.Group className="mb-3">
 							<Form.Label>Colaborador</Form.Label>
-							<SelectColaborador value={id_colaborador} onChange={setIdColaborador} />
+							<SelectColaborador value={id_colaborador.id} onChange={setIdColaborador} />
 						</Form.Group>
 
 						<Form.Group className="mb-3">

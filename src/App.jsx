@@ -20,6 +20,9 @@ import TiposPermisos from "./pages/TiposPermisos";
 import Colaboradores from "./pages/Colaboradores";
 import AsignarHorarioModal from "./pages/AsignarHorario";
 import img_user from "./assets/img/undraw_profile.svg";
+import Reportes from "./pages/Reportes";
+import ReportesDia from "./pages/ReportesDia";
+import ReportesDias from "./pages/ReportesDias";
 
 // Páginas placeholder
 const Areas = () => <div className="p-4">Gestión de Áreas</div>;
@@ -28,7 +31,7 @@ const Marcaciones = () => <div className="p-4">Gestión de Marcaciones</div>;
 
 export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
-
+  const storedUser = JSON.parse(localStorage.getItem("usuario"));
   return (
     <Router>
       <Routes>
@@ -69,7 +72,7 @@ export default function App() {
                               className="mr-2 d-none d-lg-inline small text-white"
                               id="span-usuario"
                             >
-                              Diego Engelbert Aranibar Ramos
+                              {storedUser?.name || "Usuario"}
                             </span>
                             <img
                               className="img-profile rounded-circle"
@@ -86,6 +89,7 @@ export default function App() {
                               className="dropdown-item"
                               onClick={() => {
                                 localStorage.removeItem("token");
+                                localStorage.removeItem("usuario");
                                 window.location.href = "/login";
                               }}
                             >
@@ -108,6 +112,9 @@ export default function App() {
                         <Route path="/puestos" element={<Puestos />} />
                         <Route path="/areas" element={<Areas />} />
                         <Route path="/asignar" element={<AsignarHorarioModal />} />
+                        <Route path="/reportes" element={<Reportes />} />
+                        <Route path="/reportes_dia" element={<ReportesDia />} />
+                        <Route path="/reportes_dias" element={<ReportesDias />} />
                         <Route
                           path="/tipos_permisos"
                           element={<TiposPermisos />}

@@ -26,12 +26,15 @@ export default function Feriados() {
     };
 
     const guardar = async () => {
+        const fechaFormateada = fecha instanceof Date
+            ? fecha.toISOString().split("T")[0] // → '2025-11-22'
+            : fecha.split("T")[0]; // por si viene como string ISO
         try {
             let res = null;
             if (idEdit) {
-                res = await updateFeriado(idEdit, { fecha, descripcion, estado });
+                res = await updateFeriado(idEdit, { fecha: fechaFormateada, descripcion, estado });
             } else {
-                res = await createFeriado({ fecha, descripcion, estado });
+                res = await createFeriado({ fecha: fechaFormateada, descripcion, estado });
             }
             console.log(res);
             if (res.status === "success") {

@@ -21,10 +21,13 @@ export default function SelectColaborador({ value, onChange }) {
     if (loading) return <p>Cargando...</p>;
 
     return (
-        <Form.Control 
-            as="select" 
-            value={value || ""} 
-            onChange={(e) => onChange(e.target.value)}
+        <Form.Control
+            as="select"
+            value={value || ""}
+            onChange={(e) => onChange({
+                id: e.target.value,
+                nombre: e.target.options[e.target.selectedIndex].text
+            })}
             className="form-control"
         >
             <option value="">--SELECCIONE--</option>

@@ -55,12 +55,13 @@ export default function Sidebar() {
         <a className="nav-link" to="#" data-toggle="collapse" data-target="#collapsePOS"
           aria-expanded="true" aria-controls="collapsePOS">
           <i className="fas fa-fw fa-folder"></i>
-          <span>Ventas</span>
+          <span>Reportes</span>
         </a>
         <div id="collapsePOS" className="collapse" aria-labelledby="headingPages" data-parent="#accordionSidebar">
           <div className="bg-brown py-2 collapse-inner rounded">
-            <NavLink  className="collapse-item" to="venta">Nueva Venta</NavLink >
-            <NavLink  className="collapse-item" to="ventas">Lista Ventas</NavLink >
+            <NavLink  className="collapse-item" to="/reportes">Por Colaborador</NavLink >
+            <NavLink  className="collapse-item" to="/reportes_dia">Por Día</NavLink >
+            <NavLink  className="collapse-item" to="/reportes_dias">Por Completo</NavLink >
           </div>
         </div>
       </li>

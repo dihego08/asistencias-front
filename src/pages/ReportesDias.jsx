@@ -109,28 +109,55 @@ export default function ReportesDia() {
                 'Nombre': row.nombre,
             };
 
-            // Agregar días del mes
+            // Agregar días del mes como valores numéricos
             for (let i = 1; i <= getDiasDelMes(); i++) {
                 const diaKey = `dia_${String(i).padStart(2, '0')}`;
-                rowData[`Día ${i}`] = row[diaKey] || '';
+                const valor = row[diaKey];
+
+                // Convertir a número o dejar vacío/guión
+                if (valor === '-' || valor === null || valor === undefined) {
+                    rowData[`Día ${i}`] = valor || '';
+                } else if (valor === '0.00') {
+                    rowData[`Día ${i}`] = 0;
+                } else {
+                    // Convertir el string a número decimal
+                    const numValue = parseFloat(valor);
+                    rowData[`Día ${i}`] = isNaN(numValue) ? valor : numValue;
+                }
             }
 
-            // Agregar totales
-            /*rowData['Total Horas'] = row.total_horas;
-            rowData['Horas Teóricas'] = row.horas_teoricas;
-            rowData['Total Faltas'] = row.total_faltas;
-            rowData['Días Asistidos'] = row.dias_asistidos;*/
-            rowData['TOTAL'] = row.total_horas;
-            rowData['HRS. TEÓR.'] = row.horas_teoricas;
-            rowData['HRS. EXT.'] = calcularDiferenciaHoras(row.horas_teoricas, row.total_horas) < 0 ? '' : calcularDiferenciaHoras(row.horas_teoricas, row.total_horas);
-            rowData['HRS. TAR.'] = row.total_tardanza == "00:00:00" ? "" : row.total_tardanza;
-            rowData['HRS. PER.'] = row.total_horas_permiso == "00:00:00" ? "" : row.total_horas_permiso;
-            rowData['FALTAS'] = row.total_faltas;
-            rowData['ASIST.'] = row.dias_asistidos;
+            // Agregar totales como números
+            rowData['TOTAL'] = parseFloat(row.total_horas) || 0;
+            rowData['HRS. TEÓR.'] = parseFloat(row.horas_teoricas) || 0;
+
+            const diferenciaHoras = calcularDiferenciaHoras(row.horas_teoricas, row.total_horas);
+            rowData['HRS. EXT.'] = row.horas_extras;
+
+            rowData['HRS. TAR.'] = parseFloat(row.total_tardanza) || '';
+            rowData['HRS. PER.'] = parseFloat(row.total_horas_permiso) || '';
+            rowData['FALTAS'] = parseInt(row.total_faltas) || 0;
+            rowData['ASIST.'] = parseInt(row.dias_asistidos) || 0;
+
             return rowData;
         });
 
         const ws = XLSX.utils.json_to_sheet(excelData);
+
+        // Opcional: Configurar formato de columnas numéricas
+        const range = XLSX.utils.decode_range(ws['!ref']);
+        for (let C = 2; C <= range.e.c; C++) { // Desde la columna de días
+            const address = XLSX.utils.encode_col(C) + "1";
+            if (!ws[address]) continue;
+
+            // Aplicar formato numérico a las columnas de horas
+            for (let R = 2; R <= range.e.r + 1; R++) {
+                const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+                if (ws[cellAddress] && typeof ws[cellAddress].v === 'number') {
+                    ws[cellAddress].z = '0.00'; // Formato con 2 decimales
+                }
+            }
+        }
+
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Reporte");
 
@@ -332,7 +359,7 @@ export default function ReportesDia() {
                                             <td className="text-center text-muted" style={{ fontSize: '0.75rem' }}>
                                                 {row.horas_teoricas}
                                             </td>
-                                            <td className="text-center text-info fw-bold">{calcularDiferenciaHoras(row.horas_teoricas, row.total_horas) < 0 ? '' : calcularDiferenciaHoras(row.horas_teoricas, row.total_horas)}</td>
+                                            <td className="text-center text-info fw-bold">{row.horas_extras}</td>
                                             <td className="text-center text-warning fw-bold">{row.total_tardanza == "00:00:00" ? "" : row.total_tardanza}</td>
                                             <td className="text-center text-primary fw-bold">{row.total_horas_permiso == "00:00:00" ? "" : row.total_horas_permiso}</td>
                                             <td className="text-center text-danger fw-bold">{row.total_faltas}</td>

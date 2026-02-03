@@ -36,6 +36,10 @@ export default function Reportes() {
             "Hora Fin Refrigerio",
             "Hora Entrada Real",
             "Hora Salida Real",
+            "Hora Inicio Refrigerio Real",
+            "Hora Fin Refrigerio Real",
+            "Hora Entrada Extra",
+            "Hora Salida Extra",
             "Estado Badge",
             "Minutos Tardanza",
             "Minutos Salida Anticipada",
@@ -45,12 +49,16 @@ export default function Reportes() {
         ];
         const tableRows = filteredData.map((row) => [
             row.fecha,
-            row.hora_entrada,
-            row.hora_salida,
+            row.hora_entrada_esperada,
+            row.hora_salida_esperada,
             row.hora_inicio_refrigerio,
             row.hora_fin_refrigerio,
-            row.hora_entrada_real,
-            row.hora_salida_real,
+            row.hora_entrada,
+            row.hora_salida,
+            row.hora_inicio_refrigerio_real,
+            row.hora_fin_refrigerio_real,
+            row.hora_entrada_extra,
+            row.hora_salida_extra,
             row.estado_asistencia,
             row.minutos_tardanza,
             row.minutos_salida_anticipada,
@@ -146,29 +154,29 @@ export default function Reportes() {
         },
         {
             name: "Hora Inicio Refrigerio",
-            selector: (row) => row.hora_inicio_refrigerio,
+            selector: (row) => row.hora_inicio_refrigerio_real,
             sortable: true,
         },
         {
             name: "Hora Fin Refrigerio",
-            selector: (row) => row.hora_fin_refrigerio,
+            selector: (row) => row.hora_fin_refrigerio_real,
             sortable: true,
         },
         {
-            name: "Hora Entrada Real",
-            selector: (row) => row.hora_entrada_real,
+            name: "Hora Entrada Ext.",
+            selector: (row) => row.hora_entrada_extra,
             sortable: true,
         },
         {
-            name: "Hora Salida Real",
-            selector: (row) => row.hora_salida_real,
+            name: "Hora Salida Ext.",
+            selector: (row) => row.hora_salida_extra,
             sortable: true,
         },
         {
             name: "Estado Badge",
             cell: (row) => (
-                <span className={getBadgeClass(row.estado_asistencia)}>
-                    {row.estado_asistencia}
+                <span className={getBadgeClass(row.estado_base)}>
+                    {row.estado_base}
                 </span>
             ),
             ignoreRowClick: true,

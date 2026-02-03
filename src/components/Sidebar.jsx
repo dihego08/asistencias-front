@@ -1,8 +1,19 @@
 import { NavLink    } from "react-router-dom";
 import logo from "../assets/img/logo.png";
+import { useEffect, useState } from "react";
 export default function Sidebar() {
+  const [collapsed, setCollapsed] = useState(false);
+
+  const toggleSidebar = () => {
+    setCollapsed(!collapsed);
+  };
   return (
-    <ul className="navbar-nav bg-gradient-primary-alt sidebar sidebar-dark accordion" id="accordionSidebar">
+    <ul
+        className={`navbar-nav bg-gradient-primary-alt sidebar sidebar-dark accordion ${
+          collapsed ? "toggled" : ""
+        }`}
+        id="accordionSidebar"
+      >
 
       <div id="sidebar-brand-logo">
         <a class="sidebar-brand d-flex align-items-center justify-content-center" href="index.html">
@@ -69,7 +80,7 @@ export default function Sidebar() {
       <hr className="sidebar-divider d-none d-md-block"></hr>
 
       <div className="text-center d-none d-md-inline">
-        <button className="rounded-circle border-0" id="sidebarToggle"></button>
+        <button className="rounded-circle border-0" id="sidebarToggle" onClick={toggleSidebar}></button>
       </div>
 
     </ul>

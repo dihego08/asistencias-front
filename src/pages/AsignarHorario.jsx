@@ -60,7 +60,7 @@ export default function AsignarHorarioModal() {
 	// Filtrado simple por fecha o estado
 	const filteredData = colaboradorHorario.filter(
 		(item) =>
-			item.colaborador.nombres?.toLowerCase().includes(filterText.toLowerCase()) ||
+			item.colaborador?.nombres?.toLowerCase().includes(filterText.toLowerCase()) ||
 			item.estado_asistencia?.toLowerCase().includes(filterText.toLowerCase())
 	);
 	const subHeaderComponent = (

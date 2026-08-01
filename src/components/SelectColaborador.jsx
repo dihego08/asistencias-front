@@ -24,15 +24,19 @@ export default function SelectColaborador({ value, onChange }) {
         <Form.Control
             as="select"
             value={value || ""}
-            onChange={(e) => onChange({
-                id: e.target.value,
-                nombre: e.target.options[e.target.selectedIndex].text
-            })}
+            onChange={(e) => {
+                const selectedOption = e.target.options[e.target.selectedIndex];
+                onChange({
+                    id: e.target.value,
+                    nombre: selectedOption.text,
+                    dni: selectedOption.dataset.dni || ""
+                });
+            }}
             className="form-control"
         >
             <option value="">--SELECCIONE--</option>
             {colaboradores.map((colaborador) => (
-                <option key={colaborador.id} value={colaborador.id}>
+                <option key={colaborador.id} value={colaborador.id} data-dni={colaborador.dni}>
                     {colaborador.nombres} {colaborador.apellido_paterno} {colaborador.apellido_materno}
                 </option>
             ))}

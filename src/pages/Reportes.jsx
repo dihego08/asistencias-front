@@ -5,7 +5,8 @@ import {
 import alertify from 'alertifyjs';
 import FechaPicker from "../components/FechaPicker"; // el componente anterior
 import SelectColaborador from "../components/SelectColaborador";
-import { Button, Dropdown, DropdownButton, Form } from "react-bootstrap";
+import { Button, Dropdown, DropdownButton, Form, Modal } from "react-bootstrap";
+import { insertarMarcacion } from "../services/marcacionesService";
 import { saveAs } from "file-saver";
 import * as XLSX from "xlsx";
 import DataTable from "react-data-table-component";
@@ -20,6 +21,50 @@ export default function Reportes() {
     const [fecha_fin, setFechaFin] = useState("");
     const [filterText, setFilterText] = useState("");
     const [loading, setLoading] = useState(false);
+
+    // Modal state
+    const [showModal, setShowModal] = useState(false);
+    const [savingMarcacion, setSavingMarcacion] = useState(false);
+    const [modalColaboradorId, setModalColaboradorId] = useState("");
+    const [marcacionData, setMarcacionData] = useState({ dni: "", fecha_hora: "" });
+
+    const handleCloseModal = () => {
+        setShowModal(false);
+        setModalColaboradorId("");
+        setMarcacionData({ dni: "", fecha_hora: "" });
+    };
+
+    const handleSaveMarcacion = async () => {
+        if (!marcacionData.dni || !marcacionData.fecha_hora) {
+            alertify.error("Por favor, seleccione un colaborador y la fecha/hora.");
+            return;
+        }
+        
+        // El input datetime-local devuelve YYYY-MM-DDTHH:mm, lo formateamos para la BD (YYYY-MM-DD HH:mm:00)
+        const formattedFechaHora = marcacionData.fecha_hora.replace('T', ' ') + ':00';
+
+        setSavingMarcacion(true);
+        try {
+            await insertarMarcacion({
+                dni: marcacionData.dni,
+                fecha_hora: formattedFechaHora,
+                estado: 1,
+                reloj_ip: 'MANUAL'
+            });
+            alertify.success("Marcación registrada correctamente");
+            handleCloseModal();
+            // Actualizar tabla si ya se había generado el reporte
+            if (id_colaborador && fecha_inicio && fecha_fin) {
+                listar();
+            }
+        } catch (error) {
+            console.error(error);
+            alertify.error("Error al registrar la marcación manual");
+        } finally {
+            setSavingMarcacion(false);
+        }
+    };
+
 
     const exportToPDF = () => {
         const doc = new jsPDF({
@@ -214,6 +259,11 @@ export default function Reportes() {
         <div>
             <h1 className="h3 mb-4 text-gray-800">Reportes</h1>
             <div className="row">
+                <div className="col-md-12 mb-3 text-end">
+                    <Button variant="success" onClick={() => setShowModal(true)}>
+                        <i className="fas fa-plus"></i> Registrar Marcación Manual
+                    </Button>
+                </div>
                 <div className="col-md-12 mb-3 row">
                     <div className="col-md-4">
                         <Form.Label className="d-block">Colaborador</Form.Label>
@@ -290,6 +340,40 @@ export default function Reportes() {
                     />
                 </div>
             </div>
+
+            <Modal show={showModal} onHide={handleCloseModal}>
+                <Modal.Header closeButton>
+                    <Modal.Title>Registrar Marcación Manual</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Form.Group className="mb-3">
+                        <Form.Label>Colaborador</Form.Label>
+                        <SelectColaborador 
+                            value={modalColaboradorId} 
+                            onChange={({ id, dni }) => {
+                                setModalColaboradorId(id);
+                                setMarcacionData({ ...marcacionData, dni: dni });
+                            }} 
+                        />
+                    </Form.Group>
+                    <Form.Group className="mb-3">
+                        <Form.Label>Fecha y Hora</Form.Label>
+                        <Form.Control 
+                            type="datetime-local" 
+                            value={marcacionData.fecha_hora} 
+                            onChange={(e) => setMarcacionData({ ...marcacionData, fecha_hora: e.target.value })} 
+                        />
+                    </Form.Group>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={handleCloseModal}>
+                        Cancelar
+                    </Button>
+                    <Button variant="primary" onClick={handleSaveMarcacion} disabled={savingMarcacion}>
+                        {savingMarcacion ? "Guardando..." : "Guardar Marcación"}
+                    </Button>
+                </Modal.Footer>
+            </Modal>
         </div>
     );
 }
